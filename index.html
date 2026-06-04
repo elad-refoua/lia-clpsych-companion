@@ -97,14 +97,49 @@
     font-size: 15px;
     margin: 0 0 18px;
   }
-  video {
-    width: 100%;
-    height: auto;
-    display: block;
+  .video-wrap {
+    position: relative;
+    overflow: hidden;
     border-radius: 4px;
     box-shadow: 0 6px 24px rgba(0,0,0,.10);
     background: #000;
   }
+  .video-pan {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: 80vh;
+  }
+  video {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: #000;
+    transition: transform .25s ease;
+    transform-origin: 50% 50%;
+  }
+  .video-wrap.zoom-1-5 video { transform: scale(1.5); transform-origin: 50% 50%; }
+  .video-wrap.zoom-2 video { transform: scale(2); transform-origin: 50% 50%; }
+  .video-wrap.zoom-1-5 .video-pan,
+  .video-wrap.zoom-2 .video-pan { cursor: grab; }
+  .zoom-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 5;
+    background: rgba(0,0,0,.68);
+    color: white;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 4px;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 12px;
+    letter-spacing: .06em;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .zoom-btn:hover { background: rgba(0,0,0,.85); }
+  .zoom-btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
   .try-it {
     margin-top: 72px;
     padding: 28px 28px 32px;
@@ -236,9 +271,14 @@
         <div class="demo-meta">2:04 · silent video, ambient score</div>
       </div>
       <p class="synopsis">The parent stays close to what Lia brings — validating, sitting with the complexity, naming feelings without rushing to fix. Lia opens slowly.</p>
-      <video controls preload="metadata" playsinline>
-        <source src="videos/take3_mentalizing.mp4" type="video/mp4">
-      </video>
+      <div class="video-wrap" data-zoom="1">
+        <button class="zoom-btn" type="button" aria-label="Zoom video">Zoom 1×</button>
+        <div class="video-pan">
+          <video controls preload="metadata" playsinline>
+            <source src="videos/take3_mentalizing.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
     </section>
 
     <section class="demo">
@@ -250,9 +290,14 @@
         <div class="demo-meta">2:04 · silent video, ambient score</div>
       </div>
       <p class="synopsis">The same Lia, with a tired parent who slips into dismissal and false reassurance. The conversation closes — and then, late, repairs.</p>
-      <video controls preload="metadata" playsinline>
-        <source src="videos/take5_overwhelmed.mp4" type="video/mp4">
-      </video>
+      <div class="video-wrap" data-zoom="1">
+        <button class="zoom-btn" type="button" aria-label="Zoom video">Zoom 1×</button>
+        <div class="video-pan">
+          <video controls preload="metadata" playsinline>
+            <source src="videos/take5_overwhelmed.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
     </section>
 
     <section class="paper-row">
@@ -283,5 +328,25 @@
     </footer>
 
   </div>
+<script>
+  // Zoom buttons cycle 1x -> 1.5x -> 2x -> 1x. Wrapper is scrollable when zoomed
+  // so the user can pan via touch/scroll. Native video controls (play, fullscreen)
+  // still work because the button is positioned outside the video element.
+  const LEVELS = ['1', '1-5', '2'];
+  const LABELS = { '1': 'Zoom 1×', '1-5': 'Zoom 1.5×', '2': 'Zoom 2×' };
+  document.querySelectorAll('.video-wrap').forEach(wrap => {
+    const btn = wrap.querySelector('.zoom-btn');
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const current = wrap.dataset.zoom || '1';
+      const next = LEVELS[(LEVELS.indexOf(current) + 1) % LEVELS.length];
+      LEVELS.forEach(l => wrap.classList.remove('zoom-' + l));
+      if (next !== '1') wrap.classList.add('zoom-' + next);
+      wrap.dataset.zoom = next;
+      btn.textContent = LABELS[next];
+    });
+  });
+</script>
 </body>
 </html>
