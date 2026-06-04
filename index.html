@@ -169,6 +169,33 @@
     font-style: italic;
   }
   .paper-row a:hover { color: var(--accent); }
+  .contact {
+    margin-top: 56px;
+    text-align: center;
+  }
+  .contact-label {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .contact-row {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 14px;
+    color: var(--soft);
+  }
+  .contact-row a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+  }
+  .contact-row a:hover { color: var(--accent); }
+  .contact-row .dot { margin: 0 10px; color: var(--soft); }
+  @media (max-width: 540px) {
+    .contact-row .dot { display: block; height: 6px; visibility: hidden; }
+  }
   footer {
     margin-top: 72px;
     padding-top: 24px;
@@ -241,6 +268,15 @@
       <a class="try-link" href="#" id="sim-link">Open simulation</a>
       <div class="availability" id="availability">Link will be enabled at the start of the talk</div>
     </div>
+
+    <section class="contact">
+      <div class="contact-label">Get in touch — collaboration on the project</div>
+      <div class="contact-row">
+        <a href="mailto:eladrefoua@gmail.com">eladrefoua@gmail.com</a>
+        <span class="dot">·</span>
+        <a href="mailto:yuval.holzman@live.biu.ac.il">yuval.holzman@live.biu.ac.il</a>
+      </div>
+    </section>
 
     <footer>
       A MENTI project &middot; CLPsych 2026
