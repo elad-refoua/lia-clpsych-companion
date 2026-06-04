@@ -147,6 +147,28 @@
     font-family: 'Helvetica', 'Arial', sans-serif;
     letter-spacing: .04em;
   }
+  .paper-row {
+    margin-top: 56px;
+    padding: 18px 22px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .paper-label {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .paper-row a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+    font-style: italic;
+  }
+  .paper-row a:hover { color: var(--accent); }
   footer {
     margin-top: 72px;
     padding-top: 24px;
@@ -206,6 +228,13 @@
       </video>
     </section>
 
+    <section class="paper-row">
+      <div class="paper-link">
+        <div class="paper-label">Full paper</div>
+        <a href="paper.pdf" target="_blank" rel="noopener">Clinical Prompt Engineering: Encoding Clinical Knowledge into AI Training Simulations — A Crisis Deployment Case Study (PDF)</a>
+      </div>
+    </section>
+
     <div class="try-it">
       <h2>Try Lia yourself</h2>
       <p>The full simulation is open to conference attendees for one hour after the talk. You will have 20 turns of conversation; the same persona will respond to you.</p>
@@ -214,7 +243,7 @@
     </div>
 
     <footer>
-      Refoua &middot; Rafaeli &middot; CLPsych 2026 &middot; Bar-Ilan University
+      A MENTI project &middot; CLPsych 2026
     </footer>
 
   </div>
