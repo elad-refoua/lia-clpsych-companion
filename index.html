@@ -114,18 +114,43 @@
     height: auto;
     display: block;
     background: #000;
-    transition: transform .25s ease;
-    transform-origin: 50% 50%;
+    transition: width .25s ease;
   }
-  .video-wrap.zoom-1-5 video { transform: scale(1.5); transform-origin: 50% 50%; }
-  .video-wrap.zoom-2 video { transform: scale(2); transform-origin: 50% 50%; }
+  /* Zoom = width scaling (not transform) so the pan container can scroll to
+     EVERY corner of the frame, including top-left. */
+  .video-wrap.zoom-1-5 video { width: 150%; }
+  .video-wrap.zoom-2 video { width: 200%; }
+  .video-wrap.zoom-3 video { width: 300%; }
   .video-wrap.zoom-1-5 .video-pan,
-  .video-wrap.zoom-2 .video-pan { cursor: grab; }
-  .zoom-btn {
+  .video-wrap.zoom-2 .video-pan,
+  .video-wrap.zoom-3 .video-pan { cursor: grab; }
+  /* Custom fullscreen on the WRAPPER (native video fullscreen would leave the
+     zoom controls behind). Applied both via the Fullscreen API and, on devices
+     that refuse element-fullscreen (iPhone), via a fixed-overlay fallback. */
+  .video-wrap.fs {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    border-radius: 0;
+    background: #000;
+  }
+  .video-wrap.fs .video-pan {
+    max-height: none;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+  }
+  .video-wrap.fs video { margin: auto; }
+  body.fs-lock { overflow: hidden; }
+  .vid-btns {
     position: absolute;
     top: 10px;
     right: 10px;
     z-index: 5;
+    display: flex;
+    gap: 8px;
+  }
+  .zoom-btn, .fs-btn {
     background: rgba(0,0,0,.68);
     color: white;
     border: none;
@@ -138,8 +163,8 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
   }
-  .zoom-btn:hover { background: rgba(0,0,0,.85); }
-  .zoom-btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .zoom-btn:hover, .fs-btn:hover { background: rgba(0,0,0,.85); }
+  .zoom-btn:focus, .fs-btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
   .try-it {
     margin-top: 72px;
     padding: 28px 28px 32px;
@@ -272,9 +297,12 @@
       </div>
       <p class="synopsis">The parent stays close to what Lia brings — validating, sitting with the complexity, naming feelings without rushing to fix. Lia opens slowly.</p>
       <div class="video-wrap" data-zoom="1">
-        <button class="zoom-btn" type="button" aria-label="Zoom video">Zoom 1×</button>
+        <div class="vid-btns">
+          <button class="zoom-btn" type="button" aria-label="Zoom video">Zoom 1×</button>
+          <button class="fs-btn" type="button" aria-label="Full screen">⛶ Full screen</button>
+        </div>
         <div class="video-pan">
-          <video controls preload="metadata" playsinline>
+          <video controls controlslist="nofullscreen" preload="metadata" playsinline>
             <source src="videos/take3_mentalizing.mp4" type="video/mp4">
           </video>
         </div>
@@ -291,9 +319,12 @@
       </div>
       <p class="synopsis">The same Lia, with a tired parent who slips into dismissal and false reassurance. The conversation closes — and then, late, repairs.</p>
       <div class="video-wrap" data-zoom="1">
-        <button class="zoom-btn" type="button" aria-label="Zoom video">Zoom 1×</button>
+        <div class="vid-btns">
+          <button class="zoom-btn" type="button" aria-label="Zoom video">Zoom 1×</button>
+          <button class="fs-btn" type="button" aria-label="Full screen">⛶ Full screen</button>
+        </div>
         <div class="video-pan">
-          <video controls preload="metadata" playsinline>
+          <video controls controlslist="nofullscreen" preload="metadata" playsinline>
             <source src="videos/take5_overwhelmed.mp4" type="video/mp4">
           </video>
         </div>
@@ -309,9 +340,9 @@
 
     <div class="try-it">
       <h2>Try Lia yourself</h2>
-      <p>The full simulation is open to conference attendees for one hour after the talk. You will have 20 turns of conversation; the same persona will respond to you.</p>
+      <p>The full simulation is open to conference attendees <strong>throughout the conference day</strong> — come try it whenever you like. You will have 20 turns of conversation; the same persona will respond to you.</p>
       <a class="try-link" href="#" id="sim-link">Open simulation</a>
-      <div class="availability" id="availability">Link will be enabled at the start of the talk</div>
+      <div class="availability" id="availability">Link will be enabled on the day of the talk — open all day</div>
     </div>
 
     <section class="contact">
@@ -329,14 +360,18 @@
 
   </div>
 <script>
-  // Zoom buttons cycle 1x -> 1.5x -> 2x -> 1x. Wrapper is scrollable when zoomed
-  // so the user can pan via touch/scroll. Native video controls (play, fullscreen)
-  // still work because the button is positioned outside the video element.
-  const LEVELS = ['1', '1-5', '2'];
-  const LABELS = { '1': 'Zoom 1×', '1-5': 'Zoom 1.5×', '2': 'Zoom 2×' };
+  // Zoom cycles 1x -> 1.5x -> 2x -> 3x -> 1x, implemented as video WIDTH (not
+  // transform) so the scrollable pan container can reach every corner of the
+  // frame. Fullscreen is custom, on the WRAPPER, so zoom keeps working inside
+  // fullscreen too (native video fullscreen would leave the controls behind).
+  const LEVELS = ['1', '1-5', '2', '3'];
+  const LABELS = { '1': 'Zoom 1×', '1-5': 'Zoom 1.5×', '2': 'Zoom 2×', '3': 'Zoom 3×' };
+
   document.querySelectorAll('.video-wrap').forEach(wrap => {
-    const btn = wrap.querySelector('.zoom-btn');
-    btn.addEventListener('click', e => {
+    const zoomBtn = wrap.querySelector('.zoom-btn');
+    const fsBtn = wrap.querySelector('.fs-btn');
+
+    zoomBtn.addEventListener('click', e => {
       e.preventDefault();
       e.stopPropagation();
       const current = wrap.dataset.zoom || '1';
@@ -344,7 +379,52 @@
       LEVELS.forEach(l => wrap.classList.remove('zoom-' + l));
       if (next !== '1') wrap.classList.add('zoom-' + next);
       wrap.dataset.zoom = next;
-      btn.textContent = LABELS[next];
+      zoomBtn.textContent = LABELS[next];
+    });
+
+    function setFsUi(on) {
+      wrap.classList.toggle('fs', on);
+      document.body.classList.toggle('fs-lock', on);
+      fsBtn.textContent = on ? '✕ Exit full screen' : '⛶ Full screen';
+    }
+
+    fsBtn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isFs = wrap.classList.contains('fs');
+      if (!isFs) {
+        if (wrap.requestFullscreen) {
+          wrap.requestFullscreen().then(() => setFsUi(true)).catch(() => setFsUi(true));
+        } else {
+          setFsUi(true); // fixed-overlay fallback (iPhone etc.)
+        }
+      } else {
+        if (document.fullscreenElement === wrap && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setFsUi(false);
+      }
+    });
+
+    // Keep UI state in sync when the user exits native fullscreen via Esc
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement !== wrap && wrap.classList.contains('fs')) {
+        // Only clear if we were in NATIVE fullscreen for this wrap; the CSS
+        // fallback has no fullscreenElement, so don't clear it here.
+        if (!document.fullscreenElement) {
+          const usedNative = wrap.dataset.nativeFs === '1';
+          if (usedNative) setFsUi(false);
+        }
+      }
+      if (document.fullscreenElement === wrap) wrap.dataset.nativeFs = '1';
+      else if (!document.fullscreenElement) setTimeout(() => { wrap.dataset.nativeFs = '0'; }, 0);
+    });
+
+    // Esc also exits the CSS-fallback overlay
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && wrap.classList.contains('fs') && !document.fullscreenElement) {
+        setFsUi(false);
+      }
     });
   });
 </script>
